@@ -1,0 +1,106 @@
+openapi: 3.0.0
+info:
+  title: 4c Forecourt API
+  version: 0.1.0
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    AcceptLanguage:
+      in: header
+      name: Accept-Language
+      required: false
+      schema:
+        type: string
+        enum: [sv, en, dk]
+  schemas:
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    Stall:
+      type: object
+      properties:
+        id:
+          type: string
+        number:
+          type: integer
+        display_name:
+          type: string
+        type:
+          type: string
+          enum: [manual, automatic, vacuum]
+        status:
+          type: string
+          enum: [available, occupied, out_of_service]
+        activation:
+          $ref: '#/components/schemas/Activation'
+    Activation:
+      type: object
+      properties:
+        id:
+          type: string
+        state:
+          type: string
+          enum: [queued, starting, washing, completed, canceled, failed, expired]
+        queue_position:
+          type: integer
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        expected_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/4c/stalls/{stall_id}:
+    post:
+      summary: Post stall status update
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - name: stall_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Stall information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stall'
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stall'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
